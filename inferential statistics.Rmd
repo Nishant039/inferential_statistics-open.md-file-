@@ -1,0 +1,130 @@
+---
+title: "Statistical inference with the GSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(statsr)
+```
+
+### Load data
+
+```{r load-data}
+load("gss.Rdata")
+```
+
+
+
+* * *
+
+## Part 1: Data
+The GSS data has been through  interviews . The data has been collected through random sampling . As the survey is conducted by random sampling, the results from the survey or rather the inferences drawn from this survey can be generalized to the entire US population.
+
+* * *
+
+## Part 2: Research question
+To check whether there is a association between reading newspapers and confidence level in goverment. SInce the data has a specific branch of government , i would like to check whether reading newpaper associates with people's confidence in the executive branch of federal government.
+
+Newspapers are a part of the daily lives of almost all the people. Hence, testing whether reading newspapers affect people's confidence in gov. would be a good thing to explore .
+ 
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+Lets only talk about the 21st century data.
+```{r}
+summary(gss$year)
+dataset<-gss%>%filter(year>=2000)
+
+dataset$year%>%summary()
+
+```
+
+```{r}
+dataset %>% select(news) %>% table()
+```
+It seems like majority people read newspaper everday which indeed is a good thing.
+Lets see how much NA values does our concerned columns have.
+
+NOTE:- NULL VALUES WOULD NOT EFFECT THIS CASE BUT CLEANING DATA IS GOOD PRACTICE IN MY ACCORDANCE.
+```{r}
+any(is.na(dataset))
+library(Amelia)
+colnames(dataset)
+missmap(dataset[,c(52,105)],main = "yellow-missing, black-not missing",legend = F,col = c("yellow","black"),y.at = c(1),y.labels = c(''))
+
+```
+Since we are dealing with categorical variables, we cannot replace these values with mean . So we may remove these.
+
+```{r}
+df<-dataset %>% filter(!is.na(news)) %>% filter(!is.na(confed))
+missmap(df[,c(52,105)],main = "yellow-missing, black-not missing",legend = F,col = c("yellow","black"),y.at = c(1),y.labels = c(''))
+table(df$news)
+```
+
+Lets see how many people have confidence on the federal section of the government
+
+```{r}
+table(df$confed)
+```
+Hmmm.., that looks like most of the people donot have much confidence on this gov section.
+
+Lets visualize the distribution among news and confidence.
+```{r}
+contin_table=table(df$news,df$confed)
+mosaicplot(contin_table,shade = T)
+```
+It seems that people who read news papers don't trust the gov.'s section.
+
+* * *
+
+## Part 4: Inference
+
+Since I are dealing with multiple factors and I want to test independence, I would use the chi-square test. 
+
+My null hypthesis would be- There is no relation between reading newspapers and having confidence on the government's federal section.
+
+Alternale hypothesis - There is indeed a  relation between reading newspapers and having confidence on the government's federal section.
+
+```{r}
+chisq.test(x = df$news,y = df$confed)$expected
+```
+Observed:-
+
+```{r}
+table(df$news,df$confed)
+```
+
+Conductiong the test:-
+
+```{r}
+chisq.test(x = df$news,y = df$confed)
+```
+
+The obtained test statistic is 30.921 with a p-value 0.0001451. Since, p<0.05, we would reject the null- hypothesis .
+
+Hence, there indeed is a relationship between reading newspapers and having confidence on the federal section of the government.
+
+
+
+
+
+
+
+
+
+
+
+
+
